@@ -14,18 +14,19 @@ const coursesRoutes = require('./routes/courses')
 const authRoutes = require('./routes/auth')
 const varMiddleware = require('./middleware/variables')
 const userMiddleware = require('./middleware/user')
+const keys = require('./keys')
 
-const MONGODB_URI = `mongodb+srv://vladilen:0I5GEL9uLUcR38GC@cluster0-3rrau.mongodb.net/shop`
 const PORT = process.env.PORT || 3000
 
 const app = express()
 const hbs = exphbs.create({
   defaultLayout: 'main',
-  extname: 'hbs'
+  extname: 'hbs',
+  helpers: require('./utils/hbs-helpers')
 })
 const store = new MongoStore({
   collection: 'sessions',
-  uri: MONGODB_URI
+  uri: keys.MONGODB_URI
 })
 
 app.engine('hbs', hbs.engine)
@@ -35,7 +36,7 @@ app.set('views', 'views')
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({extended: true}))
 app.use(session({
-  secret: 'some secret value',
+  secret: keys.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   store
@@ -44,6 +45,7 @@ app.use(csrf())
 app.use(flash())
 app.use(varMiddleware)
 app.use(userMiddleware)
+
 
 app.use('/', homeRoutes)
 app.use('/add', addRoutes)
@@ -54,7 +56,7 @@ app.use('/auth', authRoutes)
 
 async function start() {
   try {
-    await mongoose.connect(MONGODB_URI, {
+    await mongoose.connect(keys.MONGODB_URI, {
       useNewUrlParser: true,
       useFindAndModify: false
     })
